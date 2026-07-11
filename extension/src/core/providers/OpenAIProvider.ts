@@ -5,15 +5,15 @@ export class OpenAIProvider implements IProvider {
 
   constructor(public config: IProviderConfig) {}
 
-  async chat(messages: IChatMessage[]): Promise<string> {
-    const response = await this._makeRequest(messages, false);
+  async chat(messages: IChatMessage[], tools?: any[]): Promise<string> {
+    const response = await this._makeRequest(messages, false, tools);
     const data = await response.json();
     return data.choices[0].message.content;
   }
 
-  async chatStream(messages: IChatMessage[], onChunk: (chunk: string) => void): Promise<void> {
+  async chatStream(messages: IChatMessage[], tools: any[] | undefined, onChunk: (chunk: string) => void): Promise<void> {
     try {
-      const response = await this._makeRequest(messages, true);
+      const response = await this._makeRequest(messages, true, tools);
       
       if (!response.body) {
         throw new Error('No response body');
@@ -51,12 +51,26 @@ export class OpenAIProvider implements IProvider {
     }
   }
 
-  private async _makeRequest(messages: IChatMessage[], stream: boolean): Promise<Response> {
+  private async _makeRequest(messages: IChatMessage[], stream: boolean, tools?: any[]): Promise<Response> {
     const endpoint = this.config.endpoint || 'https://api.openai.com/v1';
     const apiKey = this.config.apiKey;
     
     if (!apiKey) {
       throw new Error("API Key is missing for the AI Provider.");
+    }
+
+    const body: any = {
+      model: this.config.model || 'gpt-4o',
+      messages: messages,
+      stream: stream,
+      temperature: this.config.temperature ?? 0.7
+    };
+
+    if (tools && tools.length > 0) {
+      body.tools = tools.map(t => ({
+        type: 'function',
+        function: t
+      }));
     }
 
     const response = await fetch(`${endpoint}/chat/completions`, {
@@ -65,12 +79,7 @@ export class OpenAIProvider implements IProvider {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${apiKey}`
       },
-      body: JSON.stringify({
-        model: this.config.model || 'gpt-4o',
-        messages: messages,
-        stream: stream,
-        temperature: this.config.temperature ?? 0.7
-      })
+      body: JSON.stringify(body)
     });
 
     if (!response.ok) {
