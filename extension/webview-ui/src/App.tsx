@@ -6,30 +6,30 @@ type Category = 'General' | 'Account' | 'Permissions' | 'Appearance' | 'Notifica
 
 import { vscode } from './vscodeApi';
 
+import { ChevronLeft, Eye, EyeOff, Menu, X, ChevronRight } from 'lucide-react';
+
 const Toggle = ({ label, description, checked, onChange }: any) => (
-  <div className="setting-card">
-    <div className="setting-info">
-      <div className="setting-title">{label}</div>
-      {description && <div className="setting-description">{description}</div>}
+  <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 my-2 border border-border/40 rounded-lg bg-card shadow-sm gap-4">
+    <div className="flex flex-col flex-1">
+      <div className="text-sm font-semibold">{label}</div>
+      {description && <div className="text-xs text-muted-foreground mt-1">{description}</div>}
     </div>
-    <label className="toggle-switch">
-      <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} />
-      <span className="slider"></span>
+    <label className="relative inline-flex items-center cursor-pointer shrink-0 self-start sm:self-auto">
+      <input type="checkbox" className="sr-only peer" checked={checked} onChange={e => onChange(e.target.checked)} />
+      <div className="w-9 h-5 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
     </label>
   </div>
 )
 
 const Select = ({ label, description, value, options, onChange }: any) => (
-  <div className="setting-card">
-    <div className="setting-info">
-      <div className="setting-title">{label}</div>
-      {description && <div className="setting-description">{description}</div>}
+  <div className="flex flex-col p-4 my-2 border border-border/40 rounded-lg bg-card shadow-sm">
+    <div className="flex flex-col mb-3">
+      <div className="text-sm font-semibold">{label}</div>
+      {description && <div className="text-xs text-muted-foreground mt-1">{description}</div>}
     </div>
-    <div className="select-wrapper">
-      <select className="setting-input" value={value} onChange={e => onChange(e.target.value)}>
-        {options.map((o: string) => <option key={o} value={o}>{o}</option>)}
-      </select>
-    </div>
+    <select className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50" value={value} onChange={e => onChange(e.target.value)}>
+      {options.map((o: string) => <option key={o} value={o} className="bg-popover text-popover-foreground">{o}</option>)}
+    </select>
   </div>
 )
 
@@ -39,14 +39,14 @@ const Input = ({ label, description, value, onChange, type = "text", list }: any
   const inputType = isPassword && showPassword ? "text" : type;
 
   return (
-    <div className="setting-card" style={{ display: 'block' }}>
-      <div className="setting-info" style={{ marginBottom: '8px' }}>
-        <div className="setting-title">{label}</div>
-        {description && <div className="setting-description">{description}</div>}
+    <div className="flex flex-col p-4 my-2 border border-border/40 rounded-lg bg-card shadow-sm">
+      <div className="flex flex-col mb-3">
+        <div className="text-sm font-semibold">{label}</div>
+        {description && <div className="text-xs text-muted-foreground mt-1">{description}</div>}
       </div>
-      <div style={{ position: 'relative' }}>
+      <div className="relative">
         <input 
-          className="setting-input" 
+          className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50" 
           type={inputType} 
           value={value} 
           onChange={e => onChange(e.target.value)} 
@@ -55,16 +55,11 @@ const Input = ({ label, description, value, onChange, type = "text", list }: any
         {isPassword && (
           <button 
             type="button"
-            className="icon-btn"
-            style={{ position: 'absolute', right: '4px', top: '50%', transform: 'translateY(-50%)' }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
             onClick={() => setShowPassword(!showPassword)}
-            title={showPassword ? "Hide API Key" : "Show API Key"}
+            title={showPassword ? "Hide" : "Show"}
           >
-            {showPassword ? (
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 3C3.5 3 0 8 0 8s3.5 5 8 5 8-5 8-5-3.5-5-8-5zm0 8.5C6.07 11.5 4.5 9.93 4.5 8S6.07 4.5 8 4.5 11.5 6.07 11.5 8 9.93 11.5 8 11.5zM8 6C6.9 6 6 6.9 6 8s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
-            ) : (
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8.1 4.5c1.9 0 3.4 1.6 3.4 3.5 0 .6-.1 1.1-.4 1.5l2.4 2.4c1.3-1 2.5-2.2 2.5-3.9 0 0-3.5-5-8-5-1.5 0-2.8.4-4 1l1.8 1.8c.7-.8 1.5-1.3 2.3-1.3zM1 2.3l1.8 1.8c-.8.8-1.5 1.7-1.9 2.1 0 0 3.5 5 8 5 1.4 0 2.6-.3 3.7-.9l1.1 1.1 1.4-1.4-12.7-12.7L1 2.3zm3.7 3.7l1.5 1.5c-.4.5-.7 1.1-.7 1.7 0 1.9 1.6 3.5 3.5 3.5.6 0 1.1-.3 1.5-.6l1.7 1.7c-1 .6-2.2 1-3.5 1-2.9 0-5.3-2.3-5.3-5.3 0-1.1.4-2.1 1.3-2.5z"/></svg>
-            )}
+            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         )}
       </div>
@@ -75,14 +70,15 @@ const Input = ({ label, description, value, onChange, type = "text", list }: any
 function App() {
   const categories: Category[] = ['General', 'Models', 'Permissions', 'Appearance', 'Notifications', 'Customizations', 'Browser', 'Tab', 'Editor']
   const [activeTab, setActiveTab] = useState<'Chat' | 'Settings'>('Chat')
-  const [activeCategory, setActiveCategory] = useState<Category>('Models')
+  const [activeCategory, setActiveCategory] = useState<Category>('Permissions')
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   
   // Settings State
   const [provider, setProvider] = useState('OpenAI')
   const [apiEndpoint, setApiEndpoint] = useState('https://api.openai.com/v1')
   const [apiKey, setApiKey] = useState('')
   const [model, setModel] = useState('gpt-4o')
-  const [securityMode, setSecurityMode] = useState('Full access')
+  const [securityMode, setSecurityMode] = useState('Sandboxed')
   const [terminalAutoExecute, setTerminalAutoExecute] = useState('Request Review')
   const [enableShellIntegration, setEnableShellIntegration] = useState(true)
   const [nonWorkspaceFileAccess, setNonWorkspaceFileAccess] = useState(false)
@@ -145,9 +141,11 @@ function App() {
         const currentModels = PROVIDERS[provider]?.models || [];
 
         return (
-          <>
-            <div className="section-title">AI Provider Configuration</div>
-            <div className="section-subtitle">Configure your OpenAI-compatible endpoint, API key, and model choice.</div>
+          <div className="max-w-2xl mx-auto space-y-6">
+            <div>
+              <h2 className="text-xl font-bold tracking-tight">AI Provider Configuration</h2>
+              <p className="text-sm text-muted-foreground mt-1">Configure your OpenAI-compatible endpoint, API key, and model choice.</p>
+            </div>
             
             <Select 
               label="Provider" 
@@ -184,38 +182,45 @@ function App() {
                 {currentModels.map((m: string) => <option key={m} value={m} />)}
               </datalist>
             )}
-          </>
+          </div>
         )
       case 'Permissions':
         return (
-          <>
-            <div style={{ textAlign: 'center', marginBottom: '1.5rem', color: 'var(--vscode-descriptionForeground)' }}>
-              Settings - Permissions
+          <div className="max-w-2xl mx-auto space-y-6">
+            <div>
+              <h2 className="text-xl font-bold tracking-tight">Agent security mode</h2>
+              <p className="text-sm text-muted-foreground mt-1 mb-4">Select one of the three options. Agent settings and permissions can be further customized below.</p>
             </div>
             
-            <div className="setting-title" style={{ fontSize: '15px' }}>Agent security mode</div>
-            <div className="setting-description" style={{ marginBottom: '1rem' }}>Select one of the three options. Agent settings and permissions can be further customized below.</div>
-            
-            <div className="security-cards">
-              <div className={`security-card ${securityMode === 'Full access' ? 'active' : ''}`} onClick={() => updateSetting('securityMode', 'Full access', setSecurityMode)}>
-                <div className="security-card-title">Full access</div>
-                <div className="security-card-description">Agents have full access to your machine and external resources.</div>
+            <div className="grid grid-cols-1 gap-4 mb-8">
+              <div 
+                className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${securityMode === 'Full access' ? 'border-primary bg-primary/5' : 'border-border/40 bg-card hover:border-primary/50'}`} 
+                onClick={() => updateSetting('securityMode', 'Full access', setSecurityMode)}
+              >
+                <div className="font-semibold mb-1">Full access</div>
+                <div className="text-xs text-muted-foreground">Agents have full access to your machine and external resources.</div>
               </div>
-              <div className={`security-card ${securityMode === 'Sandboxed' ? 'active' : ''}`} onClick={() => updateSetting('securityMode', 'Sandboxed', setSecurityMode)}>
-                <div className="security-card-title">Sandboxed</div>
-                <div className="security-card-description">Agents run in a secure sandbox that restricts access to external resources outside of your trusted folders.</div>
+              <div 
+                className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${securityMode === 'Sandboxed' ? 'border-primary bg-primary/5' : 'border-border/40 bg-card hover:border-primary/50'}`} 
+                onClick={() => updateSetting('securityMode', 'Sandboxed', setSecurityMode)}
+              >
+                <div className="font-semibold mb-1">Sandboxed</div>
+                <div className="text-xs text-muted-foreground">Agents run in a secure sandbox that restricts access to external resources outside of your trusted folders.</div>
               </div>
-              <div className={`security-card ${securityMode === 'Strict' ? 'active' : ''}`} onClick={() => updateSetting('securityMode', 'Strict', setSecurityMode)}>
-                <div className="security-card-title">Strict</div>
-                <div className="security-card-description">Terminal commands always require review and the agent cannot access files outside of its given workspaces.</div>
+              <div 
+                className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${securityMode === 'Strict' ? 'border-primary bg-primary/5' : 'border-border/40 bg-card hover:border-primary/50'}`} 
+                onClick={() => updateSetting('securityMode', 'Strict', setSecurityMode)}
+              >
+                <div className="font-semibold mb-1">Strict</div>
+                <div className="text-xs text-muted-foreground">Terminal commands always require review and the agent cannot access files outside of its given workspaces.</div>
               </div>
             </div>
 
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '1rem' }}>Terminal</div>
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 mt-8">Terminal</div>
             
             <Select 
               label="Terminal Command Auto Execution" 
-              description="Controls whether terminal commands require your approval before running. Note: A change to this setting will only apply to new messages sent to Agent." 
+              description="Controls whether terminal commands require your approval before running." 
               value={terminalAutoExecute} 
               options={['Request Review', 'Auto Execute']} 
               onChange={(val: string) => updateSetting('terminalAutoExecute', val, setTerminalAutoExecute)} 
@@ -228,7 +233,7 @@ function App() {
               onChange={(val: boolean) => updateSetting('enableShellIntegration', val, setEnableShellIntegration)} 
             />
 
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2rem', marginBottom: '1rem' }}>File Access</div>
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 mt-8">File Access</div>
             
             <Toggle 
               label="Agent Non-Workspace File Access" 
@@ -243,42 +248,83 @@ function App() {
               checked={autoOpenEditedFiles} 
               onChange={(val: boolean) => updateSetting('autoOpenEditedFiles', val, setAutoOpenEditedFiles)} 
             />
-          </>
+          </div>
         )
       default:
-        return <div style={{ padding: '2rem' }}>{activeCategory} settings coming soon...</div>
+        return <div className="p-8 text-center text-muted-foreground">{activeCategory} settings coming soon...</div>
     }
   }
 
   return (
-    <div className="settings-container" style={{ flexDirection: 'column' }}>
+    <div className="flex flex-col h-screen w-full bg-background text-foreground overflow-hidden">
       {activeTab === 'Chat' ? (
         <ChatView 
           model={model} 
           onOpenSettings={() => setActiveTab('Settings')} 
         />
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
-          <div className="chat-header">
-            <div className="chat-header-title" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }} onClick={() => setActiveTab('Chat')}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M10 14L3 8l7-6v12z"/></svg>
-              BACK TO CHAT
+        <div className="flex flex-col h-full overflow-hidden relative">
+          <div className="flex items-center justify-between p-3 border-b border-border/40 bg-muted/20 shrink-0">
+            <div className="flex items-center gap-2">
+              <button 
+                className="p-1.5 hover:bg-muted text-muted-foreground hover:text-foreground rounded transition-colors"
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              >
+                {isSidebarOpen ? <X size={18} /> : <Menu size={18} />}
+              </button>
+              <div className="text-xs font-semibold tracking-wider text-muted-foreground flex items-center gap-1">
+                <span>Settings</span>
+                <ChevronRight size={12} />
+                <span className="text-foreground">{activeCategory}</span>
+              </div>
             </div>
+            
+            <button 
+              className="flex items-center gap-1.5 px-2 py-1 text-[11px] font-semibold tracking-wider text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors"
+              onClick={() => setActiveTab('Chat')}
+            >
+              <ChevronLeft size={14} />
+              BACK
+            </button>
           </div>
-          <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-            <div className="sidebar">
-              {categories.map(c => (
-                <div key={c} className={`nav-item ${activeCategory === c ? 'active' : ''}`} onClick={() => setActiveCategory(c)}>
-                  {c}
+          
+          <div className="flex flex-1 overflow-hidden relative">
+            {/* Sliding Drawer Sidebar */}
+            <div className={`absolute inset-y-0 left-0 w-64 border-r border-border/40 bg-card shadow-lg z-20 transform transition-transform duration-200 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+              <div className="flex flex-col h-full overflow-y-auto py-4">
+                <div className="space-y-1 px-3">
+                  {categories.map(c => (
+                    <button 
+                      key={c} 
+                      className={`w-full text-left px-3 py-2.5 text-sm rounded-md transition-colors ${activeCategory === c ? 'bg-primary text-primary-foreground font-medium shadow-sm' : 'text-muted-foreground hover:bg-muted hover:text-foreground'}`}
+                      onClick={() => {
+                        setActiveCategory(c)
+                        setIsSidebarOpen(false)
+                      }}
+                    >
+                      {c}
+                    </button>
+                  ))}
                 </div>
-              ))}
-              
-              <div style={{ padding: '1.5rem 1.5rem 0.5rem', fontSize: '11px', color: 'var(--text-muted)' }}>Workspaces</div>
-              <div className="nav-item">gravity</div>
-              <div className="nav-item">docs</div>
-              <div className="nav-item">opencode-ide</div>
+                
+                <div className="mt-8 px-6 pb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Workspaces</div>
+                <div className="space-y-1 px-3">
+                  <button className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground rounded-md transition-colors">gravity</button>
+                  <button className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground rounded-md transition-colors">docs</button>
+                  <button className="w-full text-left px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground rounded-md transition-colors">opencode-ide</button>
+                </div>
+              </div>
             </div>
-            <div className="content">
+            
+            {/* Overlay */}
+            {isSidebarOpen && (
+              <div 
+                className="absolute inset-0 bg-background/50 backdrop-blur-sm z-10" 
+                onClick={() => setIsSidebarOpen(false)}
+              />
+            )}
+            
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-background">
               {renderContent()}
             </div>
           </div>

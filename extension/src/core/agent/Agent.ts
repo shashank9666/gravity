@@ -15,12 +15,24 @@ export class Agent {
     this.toolRegistry.registerTool(new TerminalTool());
   }
 
-  public async executeTask(taskDescription: string, onUpdate: (update: string) => void): Promise<void> {
+  public clearHistory(): void {
+    this.messages = [];
+  }
+
+  public async executeTask(taskDescription: string, onUpdate: (update: string) => void, onUsage?: (usage: any) => void): Promise<void> {
     onUpdate(`Analyzing task: ${taskDescription}\n`);
 
     const context = WorkspaceContext.gatherContext();
-    const systemPrompt = `You are Gravity, an autonomous coding agent.\n\n${WorkspaceContext.formatContextForPrompt(context)}\nYou have access to tools. Use them to accomplish the task.`;
+    const systemPrompt = `You are Gravity, an intelligent coding assistant integrated into VS Code.
+Current Workspace Context:
+${context}
 
+You have access to the following tools:
+${this.toolRegistry.getSystemPrompt()}
+
+Use tools when necessary. Keep responses concise.`;
+
+    // Only add system prompt if this is a new conversation (messages is empty)
     if (this.messages.length === 0) {
       this.messages.push({ role: 'system', content: systemPrompt });
     } else {
@@ -30,10 +42,10 @@ export class Agent {
 
     this.messages.push({ role: 'user', content: taskDescription });
 
-    await this.runLoop(onUpdate);
+    await this.runLoop(onUpdate, onUsage);
   }
 
-  private async runLoop(onUpdate: (update: string) => void): Promise<void> {
+  private async runLoop(onUpdate: (update: string) => void, onUsage?: (usage: any) => void): Promise<void> {
     const maxIterations = 10;
     let iterations = 0;
 
@@ -45,7 +57,7 @@ export class Agent {
       await this.provider.chatStream(this.messages, tools, (chunk) => {
         fullResponse += chunk;
         onUpdate(chunk);
-      });
+      }, onUsage);
 
       this.messages.push({ role: 'agent', content: fullResponse });
 

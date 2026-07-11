@@ -20,14 +20,16 @@ export const ToolExecutionLog: React.FC<ToolExecutionLogProps> = ({
   const [isExpanded, setIsExpanded] = useState(false);
 
   // Map tool names to human readable actions and icons
-  let actionText = 'Using tool';
+  let actionText = 'Working';
   let Icon = Terminal;
+  let fileArg = args?.AbsolutePath || args?.TargetFile || args?.SearchPath || args?.DirectoryPath;
+  let filename = fileArg ? fileArg.split('\\\\').pop().split('/').pop() : '';
 
-  if (toolName === 'read_file' || toolName.includes('read')) {
-    actionText = 'Explored file';
+  if (toolName === 'read_file' || toolName === 'view_file' || toolName === 'grep_search') {
+    actionText = filename ? `Analyzed ${filename}` : 'Analyzed file';
     Icon = FileSearch;
-  } else if (toolName === 'write_file' || toolName.includes('replace')) {
-    actionText = 'Edited file';
+  } else if (toolName === 'write_file' || toolName === 'write_to_file' || toolName.includes('replace')) {
+    actionText = filename ? `Edited ${filename}` : 'Edited file';
     Icon = FileEdit;
   } else if (toolName === 'run_command') {
     actionText = 'Ran command';
@@ -41,16 +43,16 @@ export const ToolExecutionLog: React.FC<ToolExecutionLogProps> = ({
         className="flex items-center gap-2 p-2 text-xs hover:bg-muted/50 transition-colors w-full text-left focus:outline-none"
       >
         {status === 'success' ? (
-          <CheckCircle2 className="w-3.5 h-3.5 text-green-500/80" />
+          <CheckCircle2 className="w-3.5 h-3.5 text-green-500/80 shrink-0" />
         ) : status === 'error' ? (
-          <div className="w-3.5 h-3.5 rounded-full bg-red-500/80 flex items-center justify-center text-[8px] text-white font-bold">!</div>
+          <div className="w-3.5 h-3.5 rounded-full bg-red-500/80 flex items-center justify-center text-[8px] text-white font-bold shrink-0">!</div>
         ) : (
-          <div className="w-3.5 h-3.5 rounded-full border-2 border-muted-foreground/30 border-t-muted-foreground animate-spin" />
+          <div className="w-3.5 h-3.5 rounded-full border-2 border-primary/30 border-t-primary animate-spin shrink-0" />
         )}
         
-        <span className="font-medium text-muted-foreground flex-1">
-          {status === 'running' ? `Thinking for ${duration}...` : actionText}
-          {status === 'success' && <span className="ml-2 font-mono text-[10px] bg-background px-1.5 py-0.5 rounded text-foreground/70">{toolName}</span>}
+        <span className="font-medium flex-1 text-foreground">
+          {status === 'running' ? `Thinking...` : actionText}
+          {status === 'success' && <span className="ml-2 font-mono text-[9px] bg-background px-1 py-0.5 rounded text-muted-foreground">{toolName}</span>}
         </span>
 
         <motion.div

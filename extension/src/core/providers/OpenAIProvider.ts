@@ -11,15 +11,15 @@ export class OpenAIProvider implements IProvider {
     return data.choices[0].message.content;
   }
 
-  async chatStream(messages: IChatMessage[], tools: any[] | undefined, onChunk: (chunk: string) => void): Promise<void> {
+  async chatStream(messages: IChatMessage[], tools: any[] | undefined, onChunk: (chunk: string) => void, onUsage?: (usage: any) => void): Promise<void> {
     try {
       const response = await this._makeRequest(messages, true, tools);
       
-      if (!response.body) {
+      const reader = response.body?.getReader();
+      if (!reader) {
         throw new Error('No response body');
       }
 
-      const reader = response.body.getReader();
       const decoder = new TextDecoder('utf-8');
       let buffer = '';
 
@@ -36,8 +36,11 @@ export class OpenAIProvider implements IProvider {
           if (trimmed.startsWith('data: ') && trimmed !== 'data: [DONE]') {
             try {
               const data = JSON.parse(trimmed.slice(6));
-              if (data.choices && data.choices[0].delta && data.choices[0].delta.content) {
+              if (data.choices && data.choices[0] && data.choices[0].delta && data.choices[0].delta.content) {
                 onChunk(data.choices[0].delta.content);
+              }
+              if (data.usage && onUsage) {
+                onUsage(data.usage);
               }
             } catch (e) {
               // Ignore parse errors on partial chunks
@@ -65,6 +68,10 @@ export class OpenAIProvider implements IProvider {
       stream: stream,
       temperature: this.config.temperature ?? 0.7
     };
+
+    if (stream) {
+      body.stream_options = { include_usage: true };
+    }
 
     if (tools && tools.length > 0) {
       body.tools = tools.map(t => ({

@@ -7,9 +7,10 @@ import { OpenAIProvider } from '../../core/providers/OpenAIProvider';
 export class ChatSidebarProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = 'gravityChatView';
     private _view?: vscode.WebviewView;
+    private _agent?: Agent;
 
     constructor(
-        private readonly _extensionUri: vscode.Uri,
+        private readonly _context: vscode.ExtensionContext,
     ) { }
 
     public resolveWebviewView(
@@ -22,7 +23,7 @@ export class ChatSidebarProvider implements vscode.WebviewViewProvider {
         webviewView.webview.options = {
             enableScripts: true,
             localResourceRoots: [
-                vscode.Uri.joinPath(this._extensionUri, 'webview-ui', 'dist')
+                vscode.Uri.joinPath(this._context.extensionUri, 'webview-ui', 'dist')
             ]
         };
 
@@ -31,11 +32,20 @@ export class ChatSidebarProvider implements vscode.WebviewViewProvider {
         webviewView.webview.onDidReceiveMessage(async (data: any) => {
             if (data.type === 'sendMessage') {
                 await this._handleChatRequest(data.text, webviewView.webview);
+            } else if (data.type === 'newChat') {
+                if (this._agent) {
+                    this._agent.clearHistory();
+                }
             } else if (data.type === 'getSettings') {
                 this._sendSettingsToWebview(webviewView.webview);
             } else if (data.type === 'updateSetting') {
                 const config = vscode.workspace.getConfiguration('gravity');
                 await config.update(data.key, data.value, vscode.ConfigurationTarget.Global);
+            } else if (data.type === 'saveHistory') {
+                await this._context.workspaceState.update('gravityHistory', data.history);
+            } else if (data.type === 'getHistory') {
+                const history = this._context.workspaceState.get('gravityHistory', []);
+                webviewView.webview.postMessage({ type: 'historySync', history });
             }
         });
     }
@@ -49,16 +59,23 @@ export class ChatSidebarProvider implements vscode.WebviewViewProvider {
         };
 
         try {
-            const provider = new OpenAIProvider(providerConfig);
-            const agent = new Agent(provider);
+            if (!this._agent) {
+                const provider = new OpenAIProvider(providerConfig);
+                this._agent = new Agent(provider);
+            }
             
             // Send initial empty response so UI creates bubble
             webview.postMessage({ type: 'agentResponse', text: '', new: true });
 
-            await agent.executeTask(userMessage, (chunk: string) => {
+            await this._agent.executeTask(userMessage, (chunk: string) => {
                 webview.postMessage({
                     type: 'agentResponseChunk',
                     text: chunk
+                });
+            }, (usage: any) => {
+                webview.postMessage({
+                    type: 'agentUsage',
+                    usage: usage
                 });
             });
             
@@ -91,8 +108,8 @@ export class ChatSidebarProvider implements vscode.WebviewViewProvider {
 
     private _getHtmlForWebview(webview: vscode.Webview) {
         // Get URI for the script and style
-        const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'webview-ui', 'dist', 'assets', 'index.js'));
-        const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'webview-ui', 'dist', 'assets', 'index.css'));
+        const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._context.extensionUri, 'webview-ui', 'dist', 'assets', 'index.js'));
+        const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(this._context.extensionUri, 'webview-ui', 'dist', 'assets', 'index.css'));
 
         // Use a nonce to only allow specific scripts to be run
         const nonce = getNonce();

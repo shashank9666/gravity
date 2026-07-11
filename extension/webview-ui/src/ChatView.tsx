@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { ToolExecutionLog } from './components/chat/ToolExecutionLog';
+import { HistoryPanel } from './components/chat/HistoryPanel';
 
 export type ToolCallInfo = {
   id: string;
@@ -34,6 +35,9 @@ export const ChatView = ({ model = 'gpt-4o', onOpenSettings }: ChatViewProps) =>
   });
   const [inputValue, setInputValue] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [tokenUsage, setTokenUsage] = useState<{prompt_tokens?: number, completion_tokens?: number, total_tokens?: number} | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -56,7 +60,7 @@ export const ChatView = ({ model = 'gpt-4o', onOpenSettings }: ChatViewProps) =>
           const lastMsg = newMsgs[newMsgs.length - 1];
           if (lastMsg && lastMsg.sender === 'agent') {
             try {
-              const lines = message.text.split('\\n');
+              const lines = message.text.split('\n');
               for (const line of lines) {
                 if (line.trim().startsWith('{') && line.trim().endsWith('}')) {
                   const event = JSON.parse(line.trim());
@@ -71,20 +75,23 @@ export const ChatView = ({ model = 'gpt-4o', onOpenSettings }: ChatViewProps) =>
                       status: 'running'
                     });
                   } else if (event.type === 'toolResult') {
-                    const tool = lastMsg.toolCalls.find(t => t.toolName === event.toolName && t.status === 'running');
+                    // find last running tool of this type
+                    const tools = lastMsg.toolCalls.filter(t => t.toolName === event.toolName && t.status === 'running');
+                    const tool = tools[tools.length - 1];
                     if (tool) {
                       tool.status = 'success';
                       tool.result = event.result;
                     }
                   } else if (event.type === 'toolError') {
-                    const tool = lastMsg.toolCalls.find(t => t.toolName === event.toolName && t.status === 'running');
+                    const tools = lastMsg.toolCalls.filter(t => t.toolName === event.toolName && t.status === 'running');
+                    const tool = tools[tools.length - 1];
                     if (tool) {
                       tool.status = 'error';
                       tool.result = event.error;
                     }
                   }
                 } else {
-                  lastMsg.text += line;
+                  lastMsg.text += line + '\n';
                 }
               }
             } catch (e) {
@@ -95,10 +102,17 @@ export const ChatView = ({ model = 'gpt-4o', onOpenSettings }: ChatViewProps) =>
         });
       } else if (message.type === 'agentError') {
         setMessages((prev) => [...prev, { id: Date.now(), sender: 'error', text: message.text }]);
+      } else if (message.type === 'agentUsage') {
+        setTokenUsage(message.usage);
+      } else if (message.type === 'historySync') {
+        setSessions(message.history || []);
       }
     };
 
     window.addEventListener('message', handleMessage);
+    if (vscode) {
+      vscode.postMessage({ type: 'getHistory' });
+    }
     return () => window.removeEventListener('message', handleMessage);
   }, []);
 
@@ -121,19 +135,65 @@ export const ChatView = ({ model = 'gpt-4o', onOpenSettings }: ChatViewProps) =>
     setInputValue('');
   };
 
+  const handleNewChat = () => {
+    if (messages.length > 1) {
+      const userMessage = messages.find(m => m.sender === 'user');
+      const title = userMessage ? (userMessage.text.length > 30 ? userMessage.text.slice(0, 30) + '...' : userMessage.text) : 'New Conversation';
+      const newSession = {
+        id: Date.now().toString(),
+        title,
+        date: new Date().toLocaleDateString(),
+        messages: [...messages]
+      };
+      const newSessions = [newSession, ...sessions];
+      setSessions(newSessions);
+      if (vscode) {
+        vscode.postMessage({ type: 'saveHistory', history: newSessions });
+      }
+    }
+
+    setMessages([{ id: 1, sender: 'agent', text: 'Hello! I am your Gravity agent. How can I help you?', toolCalls: [] }]);
+    vscode.setState({ messages: [{ id: 1, sender: 'agent', text: 'Hello! I am your Gravity agent. How can I help you?', toolCalls: [] }] });
+    setTokenUsage(null);
+    if (vscode) {
+      vscode.postMessage({ type: 'newChat' });
+    }
+  };
+
+  const handleOpenHistory = () => {
+    setHistoryOpen(true);
+    if (vscode) {
+      vscode.postMessage({ type: 'getHistory' });
+    }
+  };
+
   return (
-    <div className="flex flex-col h-screen w-full bg-background text-foreground overflow-hidden">
+    <div className="flex flex-col h-screen w-full bg-background text-foreground overflow-hidden relative">
       {/* Header */}
       <div className="flex items-center justify-between p-3 border-b border-border/40 bg-muted/20 shrink-0">
-        <div className="text-xs font-semibold tracking-wider text-muted-foreground">GRAVITY: CHAT</div>
+        <div className="flex items-center gap-2">
+          <div className="text-xs font-semibold tracking-wider text-muted-foreground">GRAVITY: CHAT</div>
+          {tokenUsage && (
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-[10px] font-medium text-primary shadow-sm" title={`Prompt: ${tokenUsage.prompt_tokens} | Completion: ${tokenUsage.completion_tokens}`}>
+              <div className="w-1.5 h-1.5 rounded-full bg-primary/70"></div>
+              <span>{(tokenUsage.total_tokens || 0).toLocaleString()}</span>
+            </div>
+          )}
+        </div>
         <div className="flex gap-1">
-          <button className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="New Chat">＋</button>
-          <button className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="History">🕒</button>
+          <button className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="New Chat" onClick={handleNewChat}>
+            <Plus size={16} />
+          </button>
+          <button className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="History" onClick={handleOpenHistory}>
+            <History size={16} />
+          </button>
           <button className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="Settings" onClick={onOpenSettings}>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M14.4 9.1v-.2l-1.3-.3c-.1-.4-.3-.8-.5-1.2l.8-1-.1-.1-1.3-1.3-.1-.1-1 .8c-.4-.2-.8-.4-1.2-.5l-.3-1.3h-.2h-1.8h-.2l-.3 1.3c-.4.1-.8.3-1.2.5l-1-.8-.1.1-1.3 1.3-.1.1.8 1c-.2.4-.4.8-.5 1.2l-1.3.3v.2v1.8v.2l1.3.3c.1.4.3.8.5 1.2l-.8 1 .1.1 1.3 1.3.1.1 1-.8c.4.2.8.4 1.2.5l.3 1.3h.2h1.8h.2l.3-1.3c.4-.1.8-.3 1.2-.5l1 .8.1-.1 1.3-1.3.1-.1-.8-1c.2-.4.4-.8.5-1.2l1.3-.3v-.2V9.1zM8 10.5c-1.4 0-2.5-1.1-2.5-2.5s1.1-2.5 2.5-2.5 2.5 1.1 2.5 2.5-1.1 2.5-2.5 2.5z" /></svg>
+            <Settings size={16} />
           </button>
           <div className="relative">
-            <button className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="More Actions" onClick={() => setMenuOpen(!menuOpen)}>⋯</button>
+            <button className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors" title="More Actions" onClick={() => setMenuOpen(!menuOpen)}>
+              <MoreHorizontal size={16} />
+            </button>
             {menuOpen && (
               <div className="absolute right-0 top-full mt-1 w-48 bg-popover border border-border rounded-md shadow-md py-1 z-50">
                 <div className="px-3 py-1.5 text-sm cursor-pointer hover:bg-accent hover:text-accent-foreground" onClick={() => setMenuOpen(false)}>Customization</div>
@@ -144,6 +204,23 @@ export const ChatView = ({ model = 'gpt-4o', onOpenSettings }: ChatViewProps) =>
           </div>
         </div>
       </div>
+
+      <HistoryPanel 
+        isOpen={historyOpen} 
+        onClose={() => setHistoryOpen(false)} 
+        sessions={sessions}
+        onSelectSession={(session) => {
+          setMessages(session.messages);
+          setHistoryOpen(false);
+        }}
+        onDeleteSession={(id) => {
+          const newSessions = sessions.filter(s => s.id !== id);
+          setSessions(newSessions);
+          if (vscode) {
+            vscode.postMessage({ type: 'saveHistory', history: newSessions });
+          }
+        }}
+      />
 
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -200,7 +277,7 @@ export const ChatView = ({ model = 'gpt-4o', onOpenSettings }: ChatViewProps) =>
                     setModelDropdownOpen(false);
                     if (onOpenSettings) onOpenSettings();
                   }}>
-                    ⚙️ Change Model (Settings)
+                    <Settings2 size={14} /> Change Model (Settings)
                   </div>
                 </div>
               )}

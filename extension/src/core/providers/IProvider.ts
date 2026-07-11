@@ -27,7 +27,7 @@ export interface IProvider {
   config: IProviderConfig;
   
   chat(messages: IChatMessage[], tools?: any[]): Promise<string>;
-  chatStream(messages: IChatMessage[], tools: any[] | undefined, onChunk: (chunk: string) => void): Promise<void>;
+  chatStream(messages: IChatMessage[], tools: any[] | undefined, onChunk: (chunk: string) => void, onUsage?: (usage: any) => void): Promise<void>;
   
   // Future capabilities
   // getEmbeddings(text: string): Promise<number[]>;

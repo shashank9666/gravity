@@ -6,7 +6,7 @@ import { ChatSidebarProvider } from './ui/sidebar/chatSidebarProvider';
 let backendProcess: ChildProcess | undefined;
 
 export function activate(context: vscode.ExtensionContext) {
-    const provider = new ChatSidebarProvider(context.extensionUri);
+    const provider = new ChatSidebarProvider(context);
 
     context.subscriptions.push(
         vscode.window.registerWebviewViewProvider(
