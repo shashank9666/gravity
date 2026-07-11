@@ -21,10 +21,14 @@ export class Agent {
     const context = WorkspaceContext.gatherContext();
     const systemPrompt = `You are Gravity, an autonomous coding agent.\n\n${WorkspaceContext.formatContextForPrompt(context)}\nYou have access to tools. Use them to accomplish the task.`;
 
-    this.messages = [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: taskDescription }
-    ];
+    if (this.messages.length === 0) {
+      this.messages.push({ role: 'system', content: systemPrompt });
+    } else {
+      // Always update the system prompt context on new turns
+      this.messages[0] = { role: 'system', content: systemPrompt };
+    }
+
+    this.messages.push({ role: 'user', content: taskDescription });
 
     await this.runLoop(onUpdate);
   }

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronRight, CheckCircle2, Terminal, FileEdit, FileSearch } from 'lucide-react';
-import { cn } from '../../lib/utils';
 
 interface ToolExecutionLogProps {
   toolName: string;
@@ -34,10 +33,6 @@ export const ToolExecutionLog: React.FC<ToolExecutionLogProps> = ({
     actionText = 'Ran command';
     Icon = Terminal;
   }
-
-  const title = status === 'running' 
-    ? `Thought for ${duration} ...` 
-    : `${actionText} >`;
 
   return (
     <div className="flex flex-col my-2 border border-border/40 rounded-md overflow-hidden bg-muted/20">
