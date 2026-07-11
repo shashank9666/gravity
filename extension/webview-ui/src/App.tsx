@@ -33,13 +33,13 @@ const Select = ({ label, description, value, options, onChange }: any) => (
   </div>
 )
 
-const Input = ({ label, description, value, onChange, type = "text" }: any) => (
+const Input = ({ label, description, value, onChange, type = "text", list }: any) => (
   <div className="setting-card" style={{ display: 'block' }}>
     <div className="setting-info" style={{ marginBottom: '8px' }}>
       <div className="setting-title">{label}</div>
       {description && <div className="setting-description">{description}</div>}
     </div>
-    <input type={type} value={value} onChange={e => onChange(e.target.value)} />
+    <input type={type} value={value} onChange={e => onChange(e.target.value)} list={list} />
   </div>
 )
 
@@ -145,21 +145,17 @@ function App() {
               onChange={(val: string) => updateSetting('apiKey', val, setApiKey)} 
             />
 
-            {currentModels.length > 0 ? (
-              <Select 
-                label="Model" 
-                description="The model ID to use for chat and agent tasks." 
-                value={model} 
-                options={currentModels} 
-                onChange={(val: string) => updateSetting('model', val, setModel)} 
-              />
-            ) : (
-              <Input 
-                label="Model" 
-                description="The exact model ID to use." 
-                value={model} 
-                onChange={(val: string) => updateSetting('model', val, setModel)} 
-              />
+            <Input 
+              label="Model" 
+              description="The exact model ID to use. Select from the dropdown or type a custom model ID." 
+              value={model} 
+              list="model-list"
+              onChange={(val: string) => updateSetting('model', val, setModel)} 
+            />
+            {currentModels.length > 0 && (
+              <datalist id="model-list">
+                {currentModels.map((m: string) => <option key={m} value={m} />)}
+              </datalist>
             )}
           </>
         )
