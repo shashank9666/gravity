@@ -1,0 +1,18 @@
+.vscode/**
+.vscode-test/**
+src/**
+.gitignore
+tsconfig.json
+**/*.map
+*.vsix
+reference/**
+
+# Ignore webview-ui source files and node_modules, keep only dist
+webview-ui/node_modules/**
+webview-ui/src/**
+webview-ui/public/**
+webview-ui/*.ts
+webview-ui/*.js
+webview-ui/*.json
+webview-ui/*.html
+webview-ui/.gitignore
