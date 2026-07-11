@@ -94,9 +94,9 @@ export class ChatSidebarProvider implements vscode.WebviewViewProvider {
             let htmlContent = fs.readFileSync(indexPath, 'utf-8');
             
             // Add CSP to allow inline scripts and styles from vite-plugin-singlefile
-            const csp = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src *;">`;
+            const csp = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' vscode-resource:; script-src 'unsafe-inline' 'unsafe-eval' vscode-resource:; connect-src *; img-src data: vscode-resource: https:; font-src data: vscode-resource:;">`;
             if (!htmlContent.includes('Content-Security-Policy')) {
-                htmlContent = htmlContent.replace('<head>', `<head>\\n    ${csp}`);
+                htmlContent = htmlContent.replace('<head>', `<head>\n    ${csp}`);
             }
             
             return htmlContent;
