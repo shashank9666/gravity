@@ -26,22 +26,51 @@ const Select = ({ label, description, value, options, onChange }: any) => (
       {description && <div className="setting-description">{description}</div>}
     </div>
     <div className="select-wrapper">
-      <select value={value} onChange={e => onChange(e.target.value)}>
+      <select className="setting-input" value={value} onChange={e => onChange(e.target.value)}>
         {options.map((o: string) => <option key={o} value={o}>{o}</option>)}
       </select>
     </div>
   </div>
 )
 
-const Input = ({ label, description, value, onChange, type = "text", list }: any) => (
-  <div className="setting-card" style={{ display: 'block' }}>
-    <div className="setting-info" style={{ marginBottom: '8px' }}>
-      <div className="setting-title">{label}</div>
-      {description && <div className="setting-description">{description}</div>}
+const Input = ({ label, description, value, onChange, type = "text", list }: any) => {
+  const [showPassword, setShowPassword] = useState(false);
+  const isPassword = type === "password";
+  const inputType = isPassword && showPassword ? "text" : type;
+
+  return (
+    <div className="setting-card" style={{ display: 'block' }}>
+      <div className="setting-info" style={{ marginBottom: '8px' }}>
+        <div className="setting-title">{label}</div>
+        {description && <div className="setting-description">{description}</div>}
+      </div>
+      <div style={{ position: 'relative' }}>
+        <input 
+          className="setting-input" 
+          type={inputType} 
+          value={value} 
+          onChange={e => onChange(e.target.value)} 
+          list={list} 
+        />
+        {isPassword && (
+          <button 
+            type="button"
+            className="icon-btn"
+            style={{ position: 'absolute', right: '4px', top: '50%', transform: 'translateY(-50%)' }}
+            onClick={() => setShowPassword(!showPassword)}
+            title={showPassword ? "Hide API Key" : "Show API Key"}
+          >
+            {showPassword ? (
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 3C3.5 3 0 8 0 8s3.5 5 8 5 8-5 8-5-3.5-5-8-5zm0 8.5C6.07 11.5 4.5 9.93 4.5 8S6.07 4.5 8 4.5 11.5 6.07 11.5 8 9.93 11.5 8 11.5zM8 6C6.9 6 6 6.9 6 8s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8.1 4.5c1.9 0 3.4 1.6 3.4 3.5 0 .6-.1 1.1-.4 1.5l2.4 2.4c1.3-1 2.5-2.2 2.5-3.9 0 0-3.5-5-8-5-1.5 0-2.8.4-4 1l1.8 1.8c.7-.8 1.5-1.3 2.3-1.3zM1 2.3l1.8 1.8c-.8.8-1.5 1.7-1.9 2.1 0 0 3.5 5 8 5 1.4 0 2.6-.3 3.7-.9l1.1 1.1 1.4-1.4-12.7-12.7L1 2.3zm3.7 3.7l1.5 1.5c-.4.5-.7 1.1-.7 1.7 0 1.9 1.6 3.5 3.5 3.5.6 0 1.1-.3 1.5-.6l1.7 1.7c-1 .6-2.2 1-3.5 1-2.9 0-5.3-2.3-5.3-5.3 0-1.1.4-2.1 1.3-2.5z"/></svg>
+            )}
+          </button>
+        )}
+      </div>
     </div>
-    <input type={type} value={value} onChange={e => onChange(e.target.value)} list={list} />
-  </div>
-)
+  );
+}
 
 function App() {
   const categories: Category[] = ['General', 'Models', 'Permissions', 'Appearance', 'Notifications', 'Customizations', 'Browser', 'Tab', 'Editor']
@@ -128,14 +157,12 @@ function App() {
               onChange={handleProviderChange} 
             />
 
-            {provider === 'Custom' && (
-              <Input 
-                label="API Endpoint" 
-                description="Base URL for the OpenAI compatible API (e.g. https://api.openai.com/v1)" 
-                value={apiEndpoint} 
-                onChange={(val: string) => updateSetting('apiEndpoint', val, setApiEndpoint)} 
-              />
-            )}
+            <Input 
+              label="API Base URL" 
+              description="Base URL for the provider's API (e.g. https://api.openai.com/v1)" 
+              value={apiEndpoint} 
+              onChange={(val: string) => updateSetting('apiEndpoint', val, setApiEndpoint)} 
+            />
             
             <Input 
               label="API Key" 
