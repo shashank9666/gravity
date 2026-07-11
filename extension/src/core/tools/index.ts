@@ -38,4 +38,10 @@ export class ToolRegistry {
     }
     return await tool.execute(args);
   }
+
+  getSystemPrompt(): string {
+    return Array.from(this.tools.values())
+      .map(t => `- ${t.definition.name}: ${t.definition.description}\n  Parameters: ${JSON.stringify(t.definition.parameters)}`)
+      .join('\n');
+  }
 }

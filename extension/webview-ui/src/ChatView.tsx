@@ -23,9 +23,10 @@ import { Settings, Plus, History, MoreHorizontal, Settings2 } from 'lucide-react
 interface ChatViewProps {
   model?: string;
   onOpenSettings?: () => void;
+  onOpenContextSettings?: () => void;
 }
 
-export const ChatView = ({ model = 'gpt-4o', onOpenSettings }: ChatViewProps) => {
+export const ChatView = ({ model = 'gpt-4o', onOpenSettings, onOpenContextSettings }: ChatViewProps) => {
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>(() => {
     const savedState = vscode.getState();
@@ -196,9 +197,9 @@ export const ChatView = ({ model = 'gpt-4o', onOpenSettings }: ChatViewProps) =>
             </button>
             {menuOpen && (
               <div className="absolute right-0 top-full mt-1 w-48 bg-popover border border-border rounded-md shadow-md py-1 z-50">
-                <div className="px-3 py-1.5 text-sm cursor-pointer hover:bg-accent hover:text-accent-foreground" onClick={() => setMenuOpen(false)}>Customization</div>
-                <div className="px-3 py-1.5 text-sm cursor-pointer hover:bg-accent hover:text-accent-foreground" onClick={() => setMenuOpen(false)}>MCP Servers</div>
-                <div className="px-3 py-1.5 text-sm cursor-pointer hover:bg-accent hover:text-accent-foreground" onClick={() => setMenuOpen(false)}>Export</div>
+                <button className="w-full text-left px-3 py-2 text-sm text-popover-foreground hover:bg-accent transition-colors flex items-center gap-2" onClick={() => { setMenuOpen(false); if (onOpenContextSettings) onOpenContextSettings(); }}>
+                  <Settings2 size={14} /> View Context Settings
+                </button>
               </div>
             )}
           </div>

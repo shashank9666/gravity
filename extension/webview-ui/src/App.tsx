@@ -298,7 +298,8 @@ function App() {
       {activeTab === 'Chat' ? (
         <ChatView 
           model={model} 
-          onOpenSettings={() => setActiveTab('Settings')} 
+          onOpenSettings={() => { setActiveTab('Settings'); setActiveCategory('General'); setIsSidebarOpen(false); }}
+          onOpenContextSettings={() => { setActiveTab('Settings'); setActiveCategory('Context'); setIsSidebarOpen(false); }} 
         />
       ) : (
         <div className="flex flex-col h-full overflow-hidden relative">
