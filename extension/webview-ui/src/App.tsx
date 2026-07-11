@@ -186,39 +186,32 @@ function App() {
 
   return (
     <div className="settings-container" style={{ flexDirection: 'column' }}>
-      <div className="top-nav">
-        <div 
-          className={`nav-tab ${activeTab === 'Chat' ? 'active' : ''}`}
-          onClick={() => setActiveTab('Chat')}
-        >
-          Chat
-        </div>
-        <div 
-          className={`nav-tab ${activeTab === 'Settings' ? 'active' : ''}`}
-          onClick={() => setActiveTab('Settings')}
-        >
-          Settings
-        </div>
-      </div>
-      
       {activeTab === 'Chat' ? (
-        <ChatView />
+        <ChatView onOpenSettings={() => setActiveTab('Settings')} />
       ) : (
-        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-          <div className="sidebar">
-            {categories.map(c => (
-              <div key={c} className={`nav-item ${activeCategory === c ? 'active' : ''}`} onClick={() => setActiveCategory(c)}>
-                {c}
-              </div>
-            ))}
-            
-            <div style={{ padding: '1.5rem 1.5rem 0.5rem', fontSize: '11px', color: 'var(--text-muted)' }}>Workspaces</div>
-            <div className="nav-item">gravity</div>
-            <div className="nav-item">docs</div>
-            <div className="nav-item">opencode-ide</div>
+        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+          <div className="chat-header">
+            <div className="chat-header-title" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }} onClick={() => setActiveTab('Chat')}>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M10 14L3 8l7-6v12z"/></svg>
+              BACK TO CHAT
+            </div>
           </div>
-          <div className="content">
-            {renderContent()}
+          <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+            <div className="sidebar">
+              {categories.map(c => (
+                <div key={c} className={`nav-item ${activeCategory === c ? 'active' : ''}`} onClick={() => setActiveCategory(c)}>
+                  {c}
+                </div>
+              ))}
+              
+              <div style={{ padding: '1.5rem 1.5rem 0.5rem', fontSize: '11px', color: 'var(--text-muted)' }}>Workspaces</div>
+              <div className="nav-item">gravity</div>
+              <div className="nav-item">docs</div>
+              <div className="nav-item">opencode-ide</div>
+            </div>
+            <div className="content">
+              {renderContent()}
+            </div>
           </div>
         </div>
       )}
