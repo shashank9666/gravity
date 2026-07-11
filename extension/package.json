@@ -1,0 +1,105 @@
+{
+  "name": "gravity-extension",
+  "displayName": "Gravity",
+  "publisher": "gravity",
+  "description": "Gravity is an AI-native coding assistant for Visual Studio Code that brings autonomous software engineering directly into your editor.",
+  "version": "0.1.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gravity/gravity-extension.git"
+  },
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Machine Learning",
+    "Other"
+  ],
+  "keywords": [
+    "ai",
+    "agent",
+    "autonomous",
+    "coding assistant",
+    "copilot"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "gravity-sidebar",
+          "title": "Gravity",
+          "icon": "gravity-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "gravity-sidebar": [
+        {
+          "type": "webview",
+          "id": "gravityChatView",
+          "name": "Chat"
+        }
+      ]
+    },
+    "configuration": {
+      "type": "object",
+      "title": "Gravity Configuration",
+      "properties": {
+        "gravity.apiEndpoint": {
+          "type": "string",
+          "default": "https://api.openai.com/v1",
+          "description": "The base URL for the OpenAI-compatible API"
+        },
+        "gravity.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "API key for the selected provider"
+        },
+        "gravity.model": {
+          "type": "string",
+          "default": "gpt-4o",
+          "description": "The model ID to use for chat and agent tasks"
+        },
+        "gravity.securityMode": {
+          "type": "string",
+          "enum": ["Full access", "Sandboxed", "Strict"],
+          "default": "Full access",
+          "description": "Agent security and execution mode"
+        },
+        "gravity.terminalAutoExecute": {
+          "type": "string",
+          "enum": ["Request Review", "Auto Execute"],
+          "default": "Request Review",
+          "description": "Terminal command execution policy"
+        },
+        "gravity.enableShellIntegration": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable VS Code shell integration for terminal tracking"
+        },
+        "gravity.nonWorkspaceFileAccess": {
+          "type": "boolean",
+          "default": false,
+          "description": "Allow agent to access files outside the workspace"
+        },
+        "gravity.autoOpenEditedFiles": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically open files edited by the agent"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.90.0",
+    "typescript": "^5.0.0"
+  }
+}

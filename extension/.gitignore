@@ -1,0 +1,13 @@
+node_modules/
+out/
+dist/
+build/
+.vscode-test/
+*.vsix
+.env
+.DS_Store
+
+# Ignore webview-ui build artifacts specifically if they aren't part of the root ignore
+webview-ui/node_modules/
+webview-ui/dist/
+webview-ui/build/
