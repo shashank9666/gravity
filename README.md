@@ -1,4 +1,4 @@
-# Gravity IDE
+# Gravity 
 
 Gravity is an AI-native coding assistant for Visual Studio Code that brings autonomous software engineering directly into your editor.
 
