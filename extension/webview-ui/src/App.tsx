@@ -226,7 +226,10 @@ function App() {
   return (
     <div className="settings-container" style={{ flexDirection: 'column' }}>
       {activeTab === 'Chat' ? (
-        <ChatView onOpenSettings={() => setActiveTab('Settings')} />
+        <ChatView 
+          model={model} 
+          onOpenSettings={() => setActiveTab('Settings')} 
+        />
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
           <div className="chat-header">

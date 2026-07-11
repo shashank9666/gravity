@@ -9,10 +9,12 @@ type Message = {
 import { vscode } from './vscodeApi';
 
 interface ChatViewProps {
+  model?: string;
   onOpenSettings?: () => void;
 }
 
-export const ChatView = ({ onOpenSettings }: ChatViewProps) => {
+export const ChatView = ({ model = 'gpt-4o', onOpenSettings }: ChatViewProps) => {
+  const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     { id: 1, sender: 'agent', text: 'Hello! I am your Gravity agent. How can I help you?' }
   ]);
@@ -101,7 +103,7 @@ export const ChatView = ({ onOpenSettings }: ChatViewProps) => {
         <div ref={messagesEndRef} />
       </div>
       <div className="chat-input-area">
-        <div className="chat-input-wrapper">
+        <div className="chat-input-wrapper" style={{ flexDirection: 'column', alignItems: 'stretch' }}>
           <input 
             type="text" 
             value={inputValue}
@@ -110,16 +112,45 @@ export const ChatView = ({ onOpenSettings }: ChatViewProps) => {
             placeholder="Ask a question..."
             className="chat-input"
           />
-          <div className="chat-input-actions">
-            {inputValue.trim().length > 0 ? (
-              <button className="icon-btn send-btn" title="Send" onClick={handleSend}>
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M1 14l14-6L1 2v4.5l9 1.5-9 1.5V14z"/></svg>
-              </button>
-            ) : (
-              <button className="icon-btn" title="Voice Input">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11c1.66 0 3-1.34 3-3V4c0-1.66-1.34-3-3-3S5 2.34 5 4v4c0 1.66 1.34 3 3 3zm4-3c0 2.21-1.79 4-4 4s-4-1.79-4-4H2c0 3.03 2.28 5.56 5.17 5.95V15h1.66v-2.05C11.72 12.56 14 10.03 14 8h-2z"/></svg>
-              </button>
-            )}
+          <div className="chat-input-actions" style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 8px' }}>
+            <div style={{ position: 'relative' }}>
+              <div 
+                style={{ fontSize: '11px', color: 'var(--vscode-descriptionForeground)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', padding: '4px', borderRadius: '4px' }} 
+                onClick={() => setModelDropdownOpen(!modelDropdownOpen)}
+                className="model-shortcut"
+              >
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M14 7v1H8v6H7V8H1V7h6V1h1v6h6z"/></svg>
+                {model}
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor"><path d="M4.2 10.8l3.3-3.3.5-.5.5.5 3.3 3.3.7-.7-4.5-4.5-4.5 4.5z"/></svg>
+              </div>
+              
+              {modelDropdownOpen && (
+                <div className="dropdown-menu" style={{ bottom: '100%', left: '0', top: 'auto', marginBottom: '8px', minWidth: '180px' }}>
+                  <div className="dropdown-item" style={{ borderBottom: '1px solid var(--vscode-dropdown-border)' }}>
+                    <div style={{ fontWeight: 'bold' }}>{model}</div>
+                    <div style={{ fontSize: '10px', opacity: 0.7 }}>Current Model</div>
+                  </div>
+                  <div className="dropdown-item" onClick={() => {
+                    setModelDropdownOpen(false);
+                    if (onOpenSettings) onOpenSettings();
+                  }}>
+                    ⚙️ Change Model (Settings)
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex' }}>
+              {inputValue.trim().length > 0 ? (
+                <button className="icon-btn send-btn" title="Send" onClick={handleSend}>
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M1 14l14-6L1 2v4.5l9 1.5-9 1.5V14z"/></svg>
+                </button>
+              ) : (
+                <button className="icon-btn" title="Voice Input">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 11c1.66 0 3-1.34 3-3V4c0-1.66-1.34-3-3-3S5 2.34 5 4v4c0 1.66 1.34 3 3 3zm4-3c0 2.21-1.79 4-4 4s-4-1.79-4-4H2c0 3.03 2.28 5.56 5.17 5.95V15h1.66v-2.05C11.72 12.56 14 10.03 14 8h-2z"/></svg>
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>

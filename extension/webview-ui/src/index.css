@@ -383,6 +383,30 @@ input[type="text"]:focus {
   padding-right: 8px;
 }
 
+.model-shortcut:hover {
+  background-color: var(--vscode-list-hoverBackground);
+}
+
+.dropdown-menu {
+  position: absolute;
+  background-color: var(--vscode-dropdown-background);
+  border: 1px solid var(--vscode-dropdown-border);
+  border-radius: 4px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+}
+
+.dropdown-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  color: var(--vscode-dropdown-foreground);
+  font-size: 13px;
+}
+
+.dropdown-item:hover {
+  background-color: var(--vscode-list-hoverBackground);
+}
+
 .send-btn {
   color: var(--primary);
 }
