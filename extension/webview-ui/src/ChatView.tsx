@@ -6,9 +6,7 @@ type Message = {
   text: string;
 };
 
-// Add typescript declaration for VS Code API
-declare const acquireVsCodeApi: any;
-const vscode = typeof acquireVsCodeApi === 'function' ? acquireVsCodeApi() : null;
+import { vscode } from './vscodeApi';
 
 export const ChatView = () => {
   const [messages, setMessages] = useState<Message[]>([

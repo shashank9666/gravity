@@ -4,8 +4,7 @@ import { ChatView } from './ChatView'
 
 type Category = 'General' | 'Account' | 'Permissions' | 'Appearance' | 'Notifications' | 'Models' | 'Customizations' | 'Browser' | 'Tab' | 'Editor' | 'Workspaces'
 
-declare const acquireVsCodeApi: any;
-const vscode = typeof acquireVsCodeApi === 'function' ? acquireVsCodeApi() : null;
+import { vscode } from './vscodeApi';
 
 const Toggle = ({ label, description, checked, onChange }: any) => (
   <div className="setting-card">

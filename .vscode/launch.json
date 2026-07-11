@@ -7,7 +7,8 @@
       "request": "launch",
       "runtimeExecutable": "${execPath}",
       "args": [
-        "--extensionDevelopmentPath=${workspaceFolder}/extension"
+        "--extensionDevelopmentPath=${workspaceFolder}/extension",
+        "--disable-extensions"
       ],
       "outFiles": [
         "${workspaceFolder}/extension/out/**/*.js"

@@ -22,7 +22,7 @@ export class ChatSidebarProvider implements vscode.WebviewViewProvider {
         webviewView.webview.options = {
             enableScripts: true,
             localResourceRoots: [
-                vscode.Uri.joinPath(this._extensionUri, 'webview-ui', 'build')
+                vscode.Uri.joinPath(this._extensionUri, 'webview-ui', 'dist')
             ]
         };
 
@@ -89,20 +89,35 @@ export class ChatSidebarProvider implements vscode.WebviewViewProvider {
     }
 
     private _getHtmlForWebview(webview: vscode.Webview) {
-        try {
-            const indexPath = path.join(this._extensionUri.fsPath, 'webview-ui', 'build', 'index.html');
-            let htmlContent = fs.readFileSync(indexPath, 'utf-8');
-            
-            // Add CSP to allow inline scripts and styles from vite-plugin-singlefile
-            const csp = `<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline' vscode-resource:; script-src 'unsafe-inline' 'unsafe-eval' vscode-resource:; connect-src *; img-src data: vscode-resource: https:; font-src data: vscode-resource:;">`;
-            if (!htmlContent.includes('Content-Security-Policy')) {
-                htmlContent = htmlContent.replace('<head>', `<head>\n    ${csp}`);
-            }
-            
-            return htmlContent;
-        } catch (error) {
-            console.error('Error reading index.html:', error);
-            return `<!DOCTYPE html><html lang="en"><body><h1>Failed to load Gravity UI</h1></body></html>`;
-        }
+        // Get URI for the script and style
+        const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'webview-ui', 'dist', 'assets', 'index.js'));
+        const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'webview-ui', 'dist', 'assets', 'index.css'));
+
+        // Use a nonce to only allow specific scripts to be run
+        const nonce = getNonce();
+
+        return `<!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}' 'unsafe-eval'; connect-src *; img-src data: ${webview.cspSource} https:; font-src data: ${webview.cspSource};">
+                <link href="${styleUri}" rel="stylesheet">
+                <title>Gravity Webview</title>
+            </head>
+            <body>
+                <div id="root"></div>
+                <script nonce="${nonce}" type="module" src="${scriptUri}"></script>
+            </body>
+            </html>`;
     }
+}
+
+function getNonce() {
+    let text = '';
+    const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    for (let i = 0; i < 32; i++) {
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+    }
+    return text;
 }
