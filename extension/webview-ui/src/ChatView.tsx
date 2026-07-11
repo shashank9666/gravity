@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { ToolExecutionLog } from './components/chat/ToolExecutionLog';
 
 export type ToolCallInfo = {
   id: string;
@@ -141,6 +142,15 @@ export const ChatView = ({ model = 'gpt-4o', onOpenSettings }: ChatViewProps) =>
         {messages.map((msg) => (
           <div key={msg.id} className={`message-bubble ${msg.sender}`}>
             {msg.text}
+            {msg.toolCalls && msg.toolCalls.map((tool) => (
+              <ToolExecutionLog 
+                key={tool.id}
+                toolName={tool.toolName}
+                args={tool.args}
+                result={tool.result}
+                status={tool.status}
+              />
+            ))}
           </div>
         ))}
         <div ref={messagesEndRef} />
