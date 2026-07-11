@@ -90,6 +90,7 @@ export class ChatSidebarProvider implements vscode.WebviewViewProvider {
 
     private _sendSettingsToWebview(webview: vscode.Webview) {
         const config = vscode.workspace.getConfiguration('gravity');
+        const contextConfig = vscode.workspace.getConfiguration('gravity.context');
         webview.postMessage({
             type: 'settingsSync',
             settings: {
@@ -102,6 +103,9 @@ export class ChatSidebarProvider implements vscode.WebviewViewProvider {
                 enableShellIntegration: config.get('enableShellIntegration'),
                 nonWorkspaceFileAccess: config.get('nonWorkspaceFileAccess'),
                 autoOpenEditedFiles: config.get('autoOpenEditedFiles'),
+                includeOpenEditors: contextConfig.get('includeOpenEditors'),
+                includeCursorPosition: contextConfig.get('includeCursorPosition'),
+                includeWorkspaceRoot: contextConfig.get('includeWorkspaceRoot'),
             }
         });
     }

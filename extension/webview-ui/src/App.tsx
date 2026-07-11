@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import './index.css'
 import { ChatView } from './ChatView'
 
-type Category = 'General' | 'Account' | 'Permissions' | 'Appearance' | 'Notifications' | 'Models' | 'Customizations' | 'Browser' | 'Tab' | 'Editor' | 'Workspaces'
+type Category = 'General' | 'Account' | 'Permissions' | 'Context' | 'Appearance' | 'Notifications' | 'Models' | 'Customizations' | 'Browser' | 'Tab' | 'Editor' | 'Workspaces'
 
 import { vscode } from './vscodeApi';
 
@@ -68,7 +68,7 @@ const Input = ({ label, description, value, onChange, type = "text", list }: any
 }
 
 function App() {
-  const categories: Category[] = ['General', 'Models', 'Permissions', 'Appearance', 'Notifications', 'Customizations', 'Browser', 'Tab', 'Editor']
+  const categories: Category[] = ['General', 'Models', 'Permissions', 'Context', 'Appearance', 'Notifications', 'Customizations', 'Browser', 'Tab', 'Editor']
   const [activeTab, setActiveTab] = useState<'Chat' | 'Settings'>('Chat')
   const [activeCategory, setActiveCategory] = useState<Category>('Permissions')
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
@@ -83,6 +83,11 @@ function App() {
   const [enableShellIntegration, setEnableShellIntegration] = useState(true)
   const [nonWorkspaceFileAccess, setNonWorkspaceFileAccess] = useState(false)
   const [autoOpenEditedFiles, setAutoOpenEditedFiles] = useState(true)
+  
+  // Context Settings State
+  const [includeOpenEditors, setIncludeOpenEditors] = useState(true)
+  const [includeCursorPosition, setIncludeCursorPosition] = useState(true)
+  const [includeWorkspaceRoot, setIncludeWorkspaceRoot] = useState(true)
 
   useEffect(() => {
     if (vscode) {
@@ -102,6 +107,9 @@ function App() {
         if (s.enableShellIntegration !== undefined) setEnableShellIntegration(s.enableShellIntegration);
         if (s.nonWorkspaceFileAccess !== undefined) setNonWorkspaceFileAccess(s.nonWorkspaceFileAccess);
         if (s.autoOpenEditedFiles !== undefined) setAutoOpenEditedFiles(s.autoOpenEditedFiles);
+        if (s.includeOpenEditors !== undefined) setIncludeOpenEditors(s.includeOpenEditors);
+        if (s.includeCursorPosition !== undefined) setIncludeCursorPosition(s.includeCursorPosition);
+        if (s.includeWorkspaceRoot !== undefined) setIncludeWorkspaceRoot(s.includeWorkspaceRoot);
       }
     };
 
@@ -183,7 +191,37 @@ function App() {
               </datalist>
             )}
           </div>
-        )
+        );
+      case 'Context':
+        return (
+          <div className="max-w-2xl mx-auto space-y-6">
+            <div>
+              <h2 className="text-xl font-bold tracking-tight">Context Settings</h2>
+              <p className="text-sm text-muted-foreground mt-1">Configure what information Gravity sends in the background to the LLM.</p>
+            </div>
+            
+            <Toggle 
+              label="Include Open Editors" 
+              description="Automatically send the contents of your open tabs as context." 
+              checked={includeOpenEditors} 
+              onChange={(val: boolean) => updateSetting('gravity.context.includeOpenEditors', val, setIncludeOpenEditors)} 
+            />
+            
+            <Toggle 
+              label="Include Cursor Position" 
+              description="Send the exact line and column where your cursor is currently located." 
+              checked={includeCursorPosition} 
+              onChange={(val: boolean) => updateSetting('gravity.context.includeCursorPosition', val, setIncludeCursorPosition)} 
+            />
+
+            <Toggle 
+              label="Include Workspace Root" 
+              description="Send the path to your current VS Code workspace root." 
+              checked={includeWorkspaceRoot} 
+              onChange={(val: boolean) => updateSetting('gravity.context.includeWorkspaceRoot', val, setIncludeWorkspaceRoot)} 
+            />
+          </div>
+        );
       case 'Permissions':
         return (
           <div className="max-w-2xl mx-auto space-y-6">

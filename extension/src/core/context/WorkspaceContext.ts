@@ -9,18 +9,23 @@ export interface AgentContext {
 
 export class WorkspaceContext {
   public static gatherContext(): AgentContext {
+    const config = vscode.workspace.getConfiguration('gravity.context');
+    const includeOpenEditors = config.get<boolean>('includeOpenEditors', true);
+    const includeCursorPosition = config.get<boolean>('includeCursorPosition', true);
+    const includeWorkspaceRoot = config.get<boolean>('includeWorkspaceRoot', true);
+
     const activeEditor = vscode.window.activeTextEditor;
     const activeFile = activeEditor ? activeEditor.document.uri.fsPath : null;
-    const cursorPosition = activeEditor ? {
+    const cursorPosition = (activeEditor && includeCursorPosition) ? {
       line: activeEditor.selection.active.line,
       character: activeEditor.selection.active.character
     } : null;
 
-    const openFiles = vscode.workspace.textDocuments
+    const openFiles = includeOpenEditors ? vscode.workspace.textDocuments
       .map(doc => doc.uri.fsPath)
-      .filter(path => !path.includes('.git'));
+      .filter(path => !path.includes('.git')) : [];
 
-    const workspaceRoot = vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0 
+    const workspaceRoot = (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0 && includeWorkspaceRoot)
       ? vscode.workspace.workspaceFolders[0].uri.fsPath 
       : null;
 
