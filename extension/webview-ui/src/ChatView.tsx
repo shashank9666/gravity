@@ -1,9 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
 
-type Message = {
+export type ToolCallInfo = {
+  id: string;
+  toolName: string;
+  args: any;
+  result?: string;
+  status: 'running' | 'success' | 'error';
+};
+
+export type Message = {
   id: number;
   sender: 'user' | 'agent' | 'error';
   text: string;
+  toolCalls?: ToolCallInfo[];
 };
 
 import { vscode } from './vscodeApi';
@@ -34,13 +43,47 @@ export const ChatView = ({ model = 'gpt-4o', onOpenSettings }: ChatViewProps) =>
     const handleMessage = (event: MessageEvent) => {
       const message = event.data;
       if (message.type === 'agentResponse' && message.new) {
-        setMessages((prev) => [...prev, { id: Date.now(), sender: 'agent', text: message.text }]);
+        setMessages((prev) => [...prev, { id: Date.now(), sender: 'agent', text: message.text, toolCalls: [] }]);
       } else if (message.type === 'agentResponseChunk') {
         setMessages((prev) => {
           const newMsgs = [...prev];
           const lastMsg = newMsgs[newMsgs.length - 1];
           if (lastMsg && lastMsg.sender === 'agent') {
-            lastMsg.text += message.text;
+            try {
+              const lines = message.text.split('\\n');
+              for (const line of lines) {
+                if (line.trim().startsWith('{') && line.trim().endsWith('}')) {
+                  const event = JSON.parse(line.trim());
+                  
+                  if (!lastMsg.toolCalls) lastMsg.toolCalls = [];
+                  
+                  if (event.type === 'toolStart') {
+                    lastMsg.toolCalls.push({
+                      id: event.toolName + '_' + Date.now(),
+                      toolName: event.toolName,
+                      args: event.args,
+                      status: 'running'
+                    });
+                  } else if (event.type === 'toolResult') {
+                    const tool = lastMsg.toolCalls.find(t => t.toolName === event.toolName && t.status === 'running');
+                    if (tool) {
+                      tool.status = 'success';
+                      tool.result = event.result;
+                    }
+                  } else if (event.type === 'toolError') {
+                    const tool = lastMsg.toolCalls.find(t => t.toolName === event.toolName && t.status === 'running');
+                    if (tool) {
+                      tool.status = 'error';
+                      tool.result = event.error;
+                    }
+                  }
+                } else {
+                  lastMsg.text += line;
+                }
+              }
+            } catch (e) {
+              lastMsg.text += message.text; // Fallback to raw text if not json
+            }
           }
           return newMsgs;
         });

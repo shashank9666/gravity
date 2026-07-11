@@ -55,9 +55,9 @@ export class Agent {
         
         try {
           const args = JSON.parse(argsStr);
-          onUpdate(`\n[Executing Tool: ${toolName}]\n`);
+          onUpdate(JSON.stringify({ type: 'toolStart', toolName, args }) + '\n');
           const result = await this.toolRegistry.executeTool(toolName, args);
-          onUpdate(`[Tool Result: ${result.substring(0, 100)}...]\n`);
+          onUpdate(JSON.stringify({ type: 'toolResult', toolName, result }) + '\n');
           
           this.messages.push({
             role: 'tool',
@@ -66,7 +66,7 @@ export class Agent {
           
           // Loop will continue to give the LLM the tool result
         } catch (e: any) {
-          onUpdate(`\n[Tool Error: ${e.message}]\n`);
+          onUpdate(JSON.stringify({ type: 'toolError', toolName, error: e.message }) + '\n');
           this.messages.push({ role: 'tool', content: `Error: ${e.message}` });
         }
       } else {
