@@ -76,6 +76,7 @@ export class ChatSidebarProvider implements vscode.WebviewViewProvider {
         webview.postMessage({
             type: 'settingsSync',
             settings: {
+                provider: config.get('provider'),
                 apiEndpoint: config.get('apiEndpoint'),
                 apiKey: config.get('apiKey'),
                 model: config.get('model'),

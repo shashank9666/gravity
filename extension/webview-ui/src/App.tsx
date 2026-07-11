@@ -49,6 +49,7 @@ function App() {
   const [activeCategory, setActiveCategory] = useState<Category>('Models')
   
   // Settings State
+  const [provider, setProvider] = useState('OpenAI')
   const [apiEndpoint, setApiEndpoint] = useState('https://api.openai.com/v1')
   const [apiKey, setApiKey] = useState('')
   const [model, setModel] = useState('gpt-4o')
@@ -67,6 +68,7 @@ function App() {
       const message = event.data;
       if (message.type === 'settingsSync') {
         const s = message.settings;
+        if (s.provider !== undefined) setProvider(s.provider);
         if (s.apiEndpoint !== undefined) setApiEndpoint(s.apiEndpoint);
         if (s.apiKey !== undefined) setApiKey(s.apiKey);
         if (s.model !== undefined) setModel(s.model);
@@ -92,17 +94,48 @@ function App() {
   const renderContent = () => {
     switch (activeCategory) {
       case 'Models':
+        const PROVIDERS: Record<string, { endpoint: string, models: string[] }> = {
+          'OpenAI': { endpoint: 'https://api.openai.com/v1', models: ['gpt-4o', 'gpt-4-turbo', 'gpt-3.5-turbo'] },
+          'Anthropic': { endpoint: 'https://api.anthropic.com/v1', models: ['claude-3-5-sonnet', 'claude-3-opus', 'claude-3-haiku'] },
+          'OpenRouter': { endpoint: 'https://openrouter.ai/api/v1', models: ['anthropic/claude-3.5-sonnet', 'meta-llama/llama-3-8b-instruct', 'google/gemini-pro'] },
+          'OpenCode': { endpoint: 'https://api.opencode.com/v1', models: ['opencode-v1', 'opencode-coder'] },
+          'Nvidia': { endpoint: 'https://api.nvcf.nvidia.com/v2/nvcf', models: ['meta/llama3-70b-instruct', 'nvidia/nemotron-4-340b-instruct'] },
+          'Ollama': { endpoint: 'http://localhost:11434/v1', models: ['llama3', 'mistral', 'codellama'] },
+          'Custom': { endpoint: '', models: [] }
+        };
+
+        const handleProviderChange = (newProvider: string) => {
+          updateSetting('provider', newProvider, setProvider);
+          if (newProvider !== 'Custom') {
+            const config = PROVIDERS[newProvider];
+            updateSetting('apiEndpoint', config.endpoint, setApiEndpoint);
+            updateSetting('model', config.models[0], setModel);
+          }
+        };
+
+        const currentModels = PROVIDERS[provider]?.models || [];
+
         return (
           <>
             <div className="section-title">AI Provider Configuration</div>
             <div className="section-subtitle">Configure your OpenAI-compatible endpoint, API key, and model choice.</div>
             
-            <Input 
-              label="API Endpoint" 
-              description="Base URL for the OpenAI compatible API (e.g. https://api.openai.com/v1 or http://localhost:1234/v1)" 
-              value={apiEndpoint} 
-              onChange={(val: string) => updateSetting('apiEndpoint', val, setApiEndpoint)} 
+            <Select 
+              label="Provider" 
+              description="Select the AI provider to power Gravity." 
+              value={provider} 
+              options={Object.keys(PROVIDERS)} 
+              onChange={handleProviderChange} 
             />
+
+            {provider === 'Custom' && (
+              <Input 
+                label="API Endpoint" 
+                description="Base URL for the OpenAI compatible API (e.g. https://api.openai.com/v1)" 
+                value={apiEndpoint} 
+                onChange={(val: string) => updateSetting('apiEndpoint', val, setApiEndpoint)} 
+              />
+            )}
             
             <Input 
               label="API Key" 
@@ -112,12 +145,22 @@ function App() {
               onChange={(val: string) => updateSetting('apiKey', val, setApiKey)} 
             />
 
-            <Input 
-              label="Model" 
-              description="The exact model ID to use (e.g., gpt-4o, claude-3-5-sonnet, or local model ID)" 
-              value={model} 
-              onChange={(val: string) => updateSetting('model', val, setModel)} 
-            />
+            {currentModels.length > 0 ? (
+              <Select 
+                label="Model" 
+                description="The model ID to use for chat and agent tasks." 
+                value={model} 
+                options={currentModels} 
+                onChange={(val: string) => updateSetting('model', val, setModel)} 
+              />
+            ) : (
+              <Input 
+                label="Model" 
+                description="The exact model ID to use." 
+                value={model} 
+                onChange={(val: string) => updateSetting('model', val, setModel)} 
+              />
+            )}
           </>
         )
       case 'Permissions':

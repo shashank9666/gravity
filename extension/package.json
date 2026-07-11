@@ -46,6 +46,12 @@
       "type": "object",
       "title": "Gravity Configuration",
       "properties": {
+        "gravity.provider": {
+          "type": "string",
+          "enum": ["OpenAI", "Anthropic", "OpenRouter", "OpenCode", "Nvidia", "Ollama", "Custom"],
+          "default": "OpenAI",
+          "description": "The AI provider to use"
+        },
         "gravity.apiEndpoint": {
           "type": "string",
           "default": "https://api.openai.com/v1",
